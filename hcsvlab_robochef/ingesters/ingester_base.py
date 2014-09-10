@@ -6,7 +6,7 @@ from hcsvlab_robochef import configmanager
 from hcsvlab_robochef.utils.manifester import *
 
 
-class Ingester(object):
+class IngesterBase(object):
 
     __metaclass__ = ABCMeta
     '''
@@ -17,13 +17,13 @@ class Ingester(object):
 
 
     @abstractmethod
-    def set_metadata(srcdir):
+    def set_metadata():
         ''' Loads the meta data for use during ingest '''
         return None
       
     
     @abstractmethod
-    def ingest_corpus(srcdir, outdir):
+    def ingest_corpus():
         '''
         The ingest entry point where an input and output directory is specified 
         '''
@@ -31,7 +31,7 @@ class Ingester(object):
       
       
     @abstractmethod
-    def ingest_document(sourcepath):
+    def ingest_document():
         '''
         Ingest a specific source document, from which meta-data annotations and raw data is produced
         '''
@@ -39,22 +39,13 @@ class Ingester(object):
 
 
     @abstractmethod
-    def identify_documents(self, documents):
+    def identify_documents():
         '''
         Identifies the indexable and display documents from the given documents according to the collection rule
         '''
         return (None, None)
 
 
-    @classmethod
-    def new_xlsx_ingester(corpus=None, output=None, metadata=None):
-        '''
-        Generator for xlsx_ingester
-        '''
-        return XLSXIngester(corpus, output, metadata)
-
-
-    # Delete the outout dir
     def clear_output_dir(self, outdir):
         ''' Clears the output directory '''
         if os.path.exists(outdir):
@@ -74,3 +65,11 @@ class Ingester(object):
         ''' Creating the manifest file and putting in output directory '''
         print "    creating collection manifest file for " + srcdir
         create_manifest(srcdir, format)
+
+
+    def generate_manifest(self):
+        ''' Creating the manifest file and putting in output directory '''
+        print "    creating collection manifest file for " + self.corpus_dir
+        create_manifest(self.corpus_dir, self.manifest_format)
+
+
