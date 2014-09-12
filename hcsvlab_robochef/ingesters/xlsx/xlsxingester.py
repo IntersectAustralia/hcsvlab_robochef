@@ -10,17 +10,20 @@ from hcsvlab_robochef.utils.filehandler import FileHandler
 
 
 class XLSXIngester(IngesterBase):
-
     metadata = {}
     speakermetadata = {}
     META_DEFAULTS = {'language': 'eng'}
 
-    
-    def __init__(self, corpus_dir, output_dir, metadata_file, manifest_format):
+
+    def __init__(self, corpus_dir, output_dir, xlsx_metadata_file, n3_metadata_file, manifest_format):
         self.corpus_dir = corpus_dir
-        self.output_dir = output_dir
-        self.metadata_file = metadata_file
-        self.manifest_format = manifest_format
+        self.output_dir = output_dir or os.path.join(self.corpus_dir, 'processed')
+        self.xlsx_metadata_file = xlsx_metadata_file or os.path.join(self.corpus_dir, 'metadata.xlsx')
+        self.n3_metadata_file = n3_metadata_file or os.path.join(self.corpus_dir, 'metadata.n3')
+        self.manifest_format = manifest_format or 'turtle'
+
+        # create output dir if not exist
+        self.__create_output_dir(self.corpus_dir, self.output_dir)
 
 
     def set_metadata(self):
@@ -29,7 +32,7 @@ class XLSXIngester(IngesterBase):
         be combined with the pathnames to the documents themselves.
         """
 
-        wb = xlrd.open_workbook(self.metadata_file)
+        wb = xlrd.open_workbook(self.xlsx_metadata_file)
         sheet = wb.sheet_by_index(2)
         tags = map(self.__convert, sheet.row(0))
 
@@ -37,7 +40,7 @@ class XLSXIngester(IngesterBase):
 
         for row in [sheet.row(i) for i in range(1, sheet.nrows)]:
             sampleid = self.__convert(row[0]).replace(".wav", "")
-            row_metadata = { 'sampleid': sampleid }
+            row_metadata = {'sampleid': sampleid}
             row_metadata.update(self.META_DEFAULTS)
             for idx in range(1, sheet.ncols):
                 propertyName = tags[idx].strip()
@@ -50,8 +53,8 @@ class XLSXIngester(IngesterBase):
             if (speakerRow != None):
                 self.speakermetadata[speakerId] = {
                     u'table_person_' + speakerId: {
-                        "id":speakerId,
-                        "Gender":self.__convert(speakerRow[1])
+                        "id": speakerId,
+                        "Gender": self.__convert(speakerRow[1])
                     }
                 }
             else:
@@ -64,7 +67,7 @@ class XLSXIngester(IngesterBase):
 
         print "  converting corpus", self.corpus_dir, "into normalised data in ", self.output_dir
         print "    clearing and creating output location"
-      
+
         self.clear_output_dir(self.output_dir)
 
         print "    processing files..."
@@ -112,7 +115,8 @@ class XLSXIngester(IngesterBase):
             speakerId = self.metadata[sampleid]["Speaker"]
             meta.update(self.speakermetadata[speakerId])
 
-            return serialiser.serialise_single_nontext(sampleid, 'MBEP', source, "Audio", mbepMap, meta, [], self.identify_documents)
+            return serialiser.serialise_single_nontext(sampleid, 'MBEP', source, "Audio", mbepMap, meta, [],
+                                                       self.identify_documents)
         else:
             print ""
             print "### Error: file '", source, "' with key '", sampleid, "' has no metadata."
@@ -133,4 +137,12 @@ class XLSXIngester(IngesterBase):
         if cell.ctype in (2, 3, 4):
             return unicode(int(cell.value))
         return cell.value
+
+
+    def __create_output_dir(self, corpus_dir, output_dir):
+        # create output directory structure, current is one single dir, should be extensible to a whole dir tree if necessary
+        # output_dir by default is corpus_dir/processed if not specified
+        o_dir = output_dir or os.path.join(corpus_dir, 'processed')
+        # create output dir
+        os.mkdir(o_dir)
 

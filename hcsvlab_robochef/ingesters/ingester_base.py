@@ -53,23 +53,16 @@ class IngesterBase(object):
         os.mkdir(outdir)
 
 
-    def copy_collection_metadata(self, srcdir, outdir, filename, savename):
+    def copy_collection_metadata(self):
         ''' Copies the collection level metadata file to output directory '''
         print "    copying collection level metadata file..."
-        metadata_file = os.path.join(srcdir, filename)
-        if os.path.exists(metadata_file) and os.path.exists(outdir):
-            shutil.copyfile(metadata_file, os.path.join(outdir,savename))
-
-
-    def create_collection_manifest(self, srcdir, format):
-        ''' Creating the manifest file and putting in output directory '''
-        print "    creating collection manifest file for " + srcdir
-        create_manifest(srcdir, format)
+        if os.path.exists(self.n3_metadata_file) and os.path.exists(self.output_dir):
+            shutil.copy2(self.n3_metadata_file, self.output_dir)
 
 
     def generate_manifest(self):
         ''' Creating the manifest file and putting in output directory '''
-        print "    creating collection manifest file for " + self.corpus_dir
-        create_manifest(self.corpus_dir, self.manifest_format)
+        print "    creating collection manifest file for " + self.output_dir
+        create_manifest(self.output_dir, self.manifest_format)
 
 
