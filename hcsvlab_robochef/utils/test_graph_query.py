@@ -18,13 +18,13 @@ class TestGraphQueries(unittest.TestCase):
 
     def test_item_query(self):
         # You can dump whole graph to graph.dump in current directory
-        #self.dump_graph()
+        self.dump_graph()
 
-        res = self.graph.query(ITEM_QUERY.replace("COLL", "mbep"))
+        res = self.graph.query(ITEM_QUERY.replace("COLL", "testdata"))
         self.assertIsInstance(res, Result)
         self.assertEqual(len(res), 1)
         for row in res:
-            self.assertEqual(str(row.item), "http://ns.ausnc.org.au/corpora/mbep/items/LD_T_6")
+            self.assertEqual(str(row.item), "http://example.com/catalog/testdata/LD_T_6")
             self.assertEqual(str(row.identifier), "LD_T_6")
             break
 
@@ -35,7 +35,7 @@ class TestGraphQueries(unittest.TestCase):
         for row in res:
             self.assertEqual(str(row.identifier), "LD_T_6.wav")
             self.assertEqual(str(row.type), "Audio")
-            self.assertEqual(str(row.source), "file:///data/production_collections/mbep/LD_T_6.wav")
+            self.assertEqual(str(row.source), "file:///data/production_collections/testdata/LD_T_6.wav")
 
     def dump_graph(self):
         with open(os.path.join(os.path.dirname(__file__), 'graph.dump'), 'w') as gd:
