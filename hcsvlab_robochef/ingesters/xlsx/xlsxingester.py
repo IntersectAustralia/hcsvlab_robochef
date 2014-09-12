@@ -3,7 +3,7 @@ import xlrd
 
 from hcsvlab_robochef import utils
 from hcsvlab_robochef.ingesters.ingester_base import IngesterBase
-from hcsvlab_robochef.ingesters.xlsx.rdf import mbepMap
+from hcsvlab_robochef.ingesters.xlsx.rdf import get_map
 from hcsvlab_robochef.utils.serialiser import *
 from hcsvlab_robochef.utils.statistics import *
 from hcsvlab_robochef.utils.filehandler import FileHandler
@@ -17,6 +17,7 @@ class XLSXIngester(IngesterBase):
 
     def __init__(self, corpus_dir, output_dir, xlsx_metadata_file, n3_metadata_file, manifest_format):
         self.corpus_dir = corpus_dir
+        self.corpus_id = os.path.basename(corpus_dir)
         self.output_dir = output_dir or os.path.join(self.corpus_dir, 'processed')
         self.xlsx_metadata_file = xlsx_metadata_file or os.path.join(self.corpus_dir, 'metadata.xlsx')
         self.n3_metadata_file = n3_metadata_file or os.path.join(self.corpus_dir, 'metadata.n3')
@@ -28,7 +29,7 @@ class XLSXIngester(IngesterBase):
 
     def set_metadata(self):
         """
-        Set the spreadsheet file from which pixar metadata is read.  This data will
+        Set the spreadsheet file from which corpus metadata is read. This data will
         be combined with the pathnames to the documents themselves.
         """
 
@@ -36,7 +37,7 @@ class XLSXIngester(IngesterBase):
         sheet = wb.sheet_by_index(2)
         tags = map(self.__convert, sheet.row(0))
 
-        speakerSheet = wb.sheet_by_index(3)
+        speaker_sheet = wb.sheet_by_index(3)
 
         for row in [sheet.row(i) for i in range(1, sheet.nrows)]:
             sampleid = self.__convert(row[0]).replace(".wav", "")
@@ -48,17 +49,17 @@ class XLSXIngester(IngesterBase):
                 row_metadata[propertyName] = propertyValue
 
             # Collect speaker metadata
-            speakerId = self.__convert(row[10])
-            speakerRow = self.__look_for_speaker(speakerId, speakerSheet)
-            if (speakerRow != None):
-                self.speakermetadata[speakerId] = {
-                    u'table_person_' + speakerId: {
-                        "id": speakerId,
-                        "Gender": self.__convert(speakerRow[1])
+            speaker_id = self.__convert(row[10])
+            speaker_row = self.__look_for_speaker(speaker_id, speaker_sheet)
+            if (speaker_row != None):
+                self.speakermetadata[speaker_id] = {
+                    u'table_person_' + speaker_id: {
+                        "id": speaker_id,
+                        "Gender": self.__convert(speaker_row[1])
                     }
                 }
             else:
-                print "### WARN: Speaker with id", speakerId, "Not found."
+                print "### WARN: Speaker with id", speaker_id, "Not found."
 
             self.metadata[sampleid] = row_metadata
 
@@ -112,10 +113,10 @@ class XLSXIngester(IngesterBase):
         if (sampleid in self.metadata):
             meta = {}
             meta.update(self.metadata[sampleid])
-            speakerId = self.metadata[sampleid]["Speaker"]
-            meta.update(self.speakermetadata[speakerId])
+            speaker_id = self.metadata[sampleid]["Speaker"]
+            meta.update(self.speakermetadata[speaker_id])
 
-            return serialiser.serialise_single_nontext(sampleid, 'MBEP', source, "Audio", mbepMap, meta, [],
+            return serialiser.serialise_single_nontext(sampleid, 'MBEP', source, "Audio", get_map(self.corpus_id), meta, [],
                                                        self.identify_documents)
         else:
             print ""
@@ -123,11 +124,11 @@ class XLSXIngester(IngesterBase):
             print ""
 
 
-    def __look_for_speaker(self, speakerId, speakerSheet):
-        ''' Function  iterates the speakers sheet looking for speakerId '''
-        for row in [speakerSheet.row(i) for i in range(1, speakerSheet.nrows)]:
+    def __look_for_speaker(self, speaker_id, speaker_sheet):
+        ''' Function  iterates the speakers sheet looking for speaker_id '''
+        for row in [speaker_sheet.row(i) for i in range(1, speaker_sheet.nrows)]:
             currentId = self.__convert(row[0])
-            if currentId == speakerId:
+            if currentId == speaker_id:
                 return row
         return None
 
