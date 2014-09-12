@@ -66,3 +66,10 @@ last_processed_file
 griffith_error_data.txt
 monash_last_data.txt
 
+### hcsvlab ###
+config.ini
+hcsvlab_robochef.log
+hcsvlab_robochef/utils/graph.dump
+include/
+local/
+
