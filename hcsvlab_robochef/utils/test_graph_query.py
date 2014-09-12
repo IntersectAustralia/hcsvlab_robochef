@@ -9,15 +9,17 @@ class TestGraphQueries(unittest.TestCase):
 
     def setUp(self):
         configmanager.configinit()
-        corpus_basedir = configmanager.get_config("TEST_DATA_BASEDIR", None)
-        rdf_file = os.path.join(corpus_basedir, "LD_T_6-metadata.rdf")
+        root_dir = configmanager.get_config("ROOT", None)
+        rdf_file = os.path.join(root_dir, 'testdata', "LD_T_6-metadata.rdf")
         self.graph = Graph().parse(rdf_file, format="turtle")
 
     def test_collection_query(self):
         pass
 
     def test_item_query(self):
-        self.dump_graph()
+        # You can dump whole graph to graph.dump in current directory
+        #self.dump_graph()
+
         res = self.graph.query(ITEM_QUERY.replace("COLL", "mbep"))
         self.assertIsInstance(res, Result)
         self.assertEqual(len(res), 1)
@@ -27,7 +29,13 @@ class TestGraphQueries(unittest.TestCase):
             break
 
     def test_document_query(self):
-        pass
+        res = self.graph.query(DOCUMENT_QUERY)
+        self.assertIsInstance(res, Result)
+        self.assertEqual(len(res), 1)
+        for row in res:
+            self.assertEqual(str(row.identifier), "LD_T_6.wav")
+            self.assertEqual(str(row.type), "Audio")
+            self.assertEqual(str(row.source), "file:///data/production_collections/mbep/LD_T_6.wav")
 
     def dump_graph(self):
         with open(os.path.join(os.path.dirname(__file__), 'graph.dump'), 'w') as gd:
