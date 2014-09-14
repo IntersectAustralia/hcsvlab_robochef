@@ -1,0 +1,54 @@
+@prefix acea: <http://ns.ausnc.org.au/schemas/annotation/ace/> .
+@prefix annotation: <http://ns.ausnc.org.au/schemas/annotation/> .
+@prefix arta: <http://ns.ausnc.org.au/schemas/annotation/art/> .
+@prefix ausnc: <http://ns.ausnc.org.au/schemas/ausnc_md_model/> .
+@prefix bibo: <http://purl.org/ontology/bibo/> .
+@prefix bio: <http://purl.org/vocab/bio/0.1/> .
+@prefix ca: <http://ns.ausnc.org.au/schemas/annotation/conversation/> .
+@prefix cooeea: <http://ns.ausnc.org.au/schemas/annotation/cooee/> .
+@prefix corpus: <http://example.com/catalog/> .
+@prefix dada: <http://purl.org/dada/schema/0.2#> .
+@prefix dbpedia: <http://dbpedia.org/resource/> .
+@prefix dc: <http://purl.org/dc/terms/> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix geonam: <http://sws.geonames.org/> .
+@prefix geopol: <http://aims.fao.org/aos/geopolitical.owl#> .
+@prefix hcsvlab: <http://hcsvlab.org/vocabulary/> .
+@prefix icea: <http://ns.ausnc.org.au/schemas/annotation/ice/> .
+@prefix maus: <http://ns.ausnc.org.au/schemas/annotation/maus/> .
+@prefix monasha: <http://ns.ausnc.org.au/schemas/annotation/monash/> .
+@prefix olac: <http://www.language-archives.org/OLAC/1.1/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <http://ns.ausnc.org.au/schemas/> .
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<http://example.com/catalog/testdata/MC_H_2> a ausnc:AusNCObject ;
+    hcsvlab:display_document <http://example.com/catalog/testdata/source/MC_H_2#Audio> ;
+    ausnc:Emotion "happy" ;
+    ausnc:FileName "MC_H_2.wav" ;
+    ausnc:audience "individual" ;
+    ausnc:communication_context "face_to_face" ;
+    ausnc:document <http://example.com/catalog/testdata/source/MC_H_2#Audio> ;
+    ausnc:interactivity "read" ;
+    ausnc:mode "spoken" ;
+    ausnc:speech_style "scripted" ;
+    dc:creator "Bill Thompson" ;
+    dc:identifier "MC_H_2" ;
+    dc:isPartOf corpus:testdata ;
+    dc:title "MQ Emotional Prosody Sentence 2" ;
+    olac:language "eng" ;
+    olac:speaker <http://example.com/catalog/testdata/person/MC> .
+
+<http://example.com/catalog/testdata/person/MC> a foaf:Person ;
+    foaf:gender "male" .
+
+<http://example.com/catalog/testdata/source/MC_H_2#Audio> a foaf:Document ;
+    dc:extent 299102 ;
+    dc:identifier "MC_H_2.wav" ;
+    dc:source <file:///data/production_collections/testdata/MC_H_2.wav> ;
+    dc:title "MC_H_2#Audio" ;
+    dc:type "Audio" .
+

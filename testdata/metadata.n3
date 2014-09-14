@@ -1,0 +1,18 @@
+@prefix MBEP: <http://ns.ausnc.org.au/corpus/MBEP/MBEP> .
+@prefix dcmitype: <http://purl.org/dc/dcmitype/> .
+@prefix dc: <http://purl.org/dc/elements/1.1/> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix marcrel: <http://www.loc.gov/loc.terms/relators/> .
+
+
+MBEP:
+	a dcmitype:Collection ;
+    dc:title "Macquarie Battery of Emotional Prosody" ;
+    dcterms:alternative "MBEP" ;
+	dcterms:abstract "Macquarie Battery of Emotional Prosody. To create stimuli that varied in emotional prosody, we recorded four male and four female adults speaking semantically neutral phrases such as: ÒThe broom is in the closet and the book is on the desk.Ó Each phrase consisted of 14 syllables and was spoken with the intention to communicate each of six emotions: happy, sad, tender, irritated, afraid, and neutral. These emotions were selected because they vary in decoding difficulty and involve a range of acoustic cues to emotion. During the recording session, an experienced recording engineer provided continuous coaching and feedback to the speakers, and speakers could repeat any spoken phrase until they were satisfied that they had effectively communicated the target emotion. The final stimulus set consisted in 96 spoken phrases (16 spoken phrases per emotion category), which can be downloaded from the first authorÕs website (www.psy.mq.edu.au/me2). The spoken phrases were recorded with a sample rate and bit depth of 44.1 KHz/16 bitÑmono in an acoustically controlled recording booth in the department of media, music, and cultural studies at Macquarie University. Participants spoke into a K2 Condenser Microphone (R¿de Microphones) and were recorded with Cubase SX 4 (Prochak).   [[taken from: Biological Sciences - Psychological and Cognitive Sciences - Social Sciences - Psychological and Cognitive Sciences: William Forde Thompson, Manuela M. Marin, and Lauren Stewart Reduced sensitivity to emotional prosody in congenital amusia rekindles the musical protolanguage hypothesis PNAS 2012 109 (46) 19027-19032; published ahead of print October 29, 2012, doi:10.1073/pnas.1210344109]]" ;
+    dcterms:itemType "Spoken" ;
+	dc:creator "Bill Thompson" ;
+    dcterms:extent "96" ;
+	marcrel:OWN "Macquarie University" ;
+	dcterms:language "eng" ;
+	.
