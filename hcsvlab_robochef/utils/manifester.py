@@ -22,7 +22,9 @@ DOCUMENT_QUERY = """SELECT DISTINCT ?type ?identifier ?source
 				    ?doc <http://purl.org/dc/terms/type> ?type .
 			   		?doc <http://purl.org/dc/terms/identifier> ?identifier .
 			   		?doc <http://purl.org/dc/terms/source> ?source .
-		   		}"""
+		   		}
+		   		ORDER BY ?type
+		   		"""
 
 
 def create_manifest(srcdir, format):
