@@ -86,6 +86,7 @@ class XLSXIngester(IngesterBase):
             docs = self.metadata[item_id]["File Name"].split(',')
             source_list = []
             for doc in docs:
+                doc = doc.strip()
                 path = os.path.join(self.corpus_dir, doc)
                 # source is a dict
                 source_type = self.__get_filetype(doc)
@@ -150,9 +151,10 @@ class XLSXIngester(IngesterBase):
     def __get_filetype(self, filename):
         types = {
             'audio/x-wav': 'Audio',
-            'audio/mpeg': 'MP3',
+            'audio/mpeg': 'Audio',
             'text/plain': 'Text',
-            'application/rtf': 'RTF'
+            'application/rtf': 'RTF',
+            'video/x-matroska': 'Video'
         }
         filetype = mimetypes.guess_type(filename)[0]
         return types[filetype]

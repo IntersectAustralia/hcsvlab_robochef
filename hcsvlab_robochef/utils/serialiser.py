@@ -97,11 +97,10 @@ class Serialiser(object):
     If we are dealing with non-textual data then copy the required data over generating the meta information
     '''
     # Add source stats    
-    key = 'table_document_' + sampleid + '#' + tipe
+    doc_metadata = self.__gen_nontext_document_metadata(tipe, sampleid, source)
+    key = 'table_document_' + doc_metadata['id'] + '#' + tipe
 
-    meta_dict = add_to_dictionary(key,
-                                  meta_dict,
-                                  self.__gen_nontext_document_metadata(tipe, sampleid, source))
+    add_to_dictionary(key, meta_dict, doc_metadata)
 
     # Copy the source document to the output folder
     shutil.copy2(source, self.outdir)
@@ -173,15 +172,16 @@ class Serialiser(object):
   def __gen_nontext_document_metadata(self, tipe, sampleid, source):
     ''' Function adds document level meta data to the dictionary '''
     stats = Statistics()
+    filename = os.path.basename(source)
     
     # 09/03/2012 SDP: The filelocation key has been removed. The Plone
     # service now determines the filelocation
     return {
       'filetype': tipe,
-      'id' : self.__get_title(sampleid, tipe),
-      'documenttitle': self.__get_title(sampleid, tipe),
+      'id' : filename,
+      'documenttitle': filename,
       'filesize': stats.get_file_stats(source),
-      'filename': os.path.basename(source)
+      'filename': filename
     }
 
   def __gen_unique_nontext_document_metadata(self, tipe, sampleid, source):
