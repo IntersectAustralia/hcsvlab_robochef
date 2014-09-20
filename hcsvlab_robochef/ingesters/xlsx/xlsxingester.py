@@ -8,24 +8,83 @@ from hcsvlab_robochef.ingesters.xlsx.rdf import get_map
 from hcsvlab_robochef.utils.serialiser import *
 from hcsvlab_robochef.utils.statistics import *
 from hcsvlab_robochef.utils.filehandler import FileHandler
-
+from hcsvlab_robochef import configmanager
 
 class XLSXIngester(IngesterBase):
     metadata = {}
     speakermetadata = {}
     META_DEFAULTS = {'language': 'eng'}
 
-    def __init__(self, corpus_dir, output_dir, xlsx_metadata_file, n3_metadata_file, manifest_format):
+    def __init__(self, corpus_dir, output_dir, xlsx_metadata_file, manifest_format):
         self.corpus_dir = corpus_dir
-        self.corpus_id = os.path.basename(corpus_dir)
+        self.corpus_id = None
         self.output_dir = output_dir or os.path.join(self.corpus_dir, 'processed')
         self.xlsx_metadata_file = xlsx_metadata_file or os.path.join(self.corpus_dir, 'metadata.xlsx')
-        self.n3_metadata_file = n3_metadata_file or os.path.join(self.corpus_dir, 'metadata.n3')
         self.manifest_format = manifest_format or 'turtle'
         self.item_ids = []
 
         # create output dir if not exist
         self.__create_output_dir(self.corpus_dir, self.output_dir)
+
+    def create_n3(self):
+        """
+        Ingest the collection sheet and create corpus.n3 - collection metadata
+        """
+        wb = xlrd.open_workbook(self.xlsx_metadata_file)
+        collection_sheet = wb.sheet_by_index(1) # Collection sheet
+
+        # Collection n3 file template
+        n3 = """
+@prefix {corpus_id}: <{base_url}{corpus_id}> .
+@prefix dcmitype: <http://purl.org/dc/dcmitype/> .
+@prefix dc: <http://purl.org/dc/elements/1.1/> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix marcrel: <http://www.loc.gov/loc.terms/relators/> .
+
+
+{corpus}:
+    a dcmitype:Collection ;
+    dc:title "{title}" ;
+    dcterms:alternative "{alternative}" ;
+    dcterms:abstract "{abstract}" ;
+    dcterms:itemType "{item_type}" ;
+    dc:creator "{creator}" ;
+    dcterms:extent "{extent}" ;
+    marcrel:OWN "{owner}" ;
+    dcterms:language "{language}" ;
+    .
+"""
+        # base_url
+        configmanager.configinit()
+        base_url = configmanager.get_config("CORPUS_BASE_URL", None)
+
+        title = self.__convert(collection_sheet.row(1)[1]) # Collection Title
+        corpus = self.__convert(collection_sheet.row(2)[1]) # Collection Identifier
+        self.corpus_id = corpus.lower() # All output use lowercase corpus id
+        extent = self.__convert(collection_sheet.row(3)[1]) # Extent
+        language = self.__convert(collection_sheet.row(4)[1]) # Language
+        item_type = self.__convert(collection_sheet.row(5)[1]) # Item Type
+        creator = self.__convert(collection_sheet.row(7)[1]) # Contributors
+        owner = self.__convert(collection_sheet.row(8)[1]) # Owner
+        abstract = self.__convert(collection_sheet.row(12)[1]) # Abstract
+        alternative = corpus
+
+        # write n3 file
+        n3_filename = "{corpus_id}.n3".format(corpus_id = self.corpus_id)
+        n3_file = open(os.path.join(self.output_dir, n3_filename), 'w+')
+        print "  generate collection n3 file - " + n3_file.name
+        n3_file.write(n3.format(corpus_id = self.corpus_id,
+                                corpus = corpus,
+                                base_url = base_url,
+                                title = title,
+                                extent = extent,
+                                language = language,
+                                item_type = item_type,
+                                creator = creator,
+                                owner = owner,
+                                abstract = abstract,
+                                alternative = alternative))
+        n3_file.close()
 
     def set_metadata(self):
         """
@@ -74,10 +133,6 @@ class XLSXIngester(IngesterBase):
         total = len(self.item_ids)
 
         print "  converting corpus", self.corpus_dir, "into normalised data in ", self.output_dir
-        print "    clearing and creating output location"
-
-        self.clear_output_dir(self.output_dir)
-
         print "    processing items..."
 
         for item_id in self.item_ids:
@@ -139,7 +194,7 @@ class XLSXIngester(IngesterBase):
         ''' There are no float values in the Excel sheet. Cut hem here to int before converting to unicode. '''
         if cell.ctype in (2, 3, 4):
             return unicode(int(cell.value))
-        return cell.value
+        return cell.value.encode('utf-8')
 
     def __create_output_dir(self, corpus_dir, output_dir):
         # create output directory structure, current is one single dir, should be extensible to a whole dir tree if necessary

@@ -17,6 +17,12 @@ class IngesterBase(object):
 
 
     @abstractmethod
+    def create_n3():
+        ''' Ingest collection level metadata '''
+        return None
+
+
+    @abstractmethod
     def set_metadata():
         ''' Loads the meta data for use during ingest '''
         return None
@@ -51,13 +57,6 @@ class IngesterBase(object):
         if os.path.exists(outdir):
             shutil.rmtree(outdir)
         os.mkdir(outdir)
-
-
-    def copy_collection_metadata(self):
-        ''' Copies the collection level metadata file to output directory '''
-        print "    copying collection level metadata file..."
-        if os.path.exists(self.n3_metadata_file) and os.path.exists(self.output_dir):
-            shutil.copy2(self.n3_metadata_file, self.output_dir)
 
 
     def generate_manifest(self):
