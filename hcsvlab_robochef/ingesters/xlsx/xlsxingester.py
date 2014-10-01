@@ -31,7 +31,7 @@ class XLSXIngester(IngesterBase):
         Ingest the collection sheet and create corpus.n3 - collection metadata
         """
         wb = xlrd.open_workbook(self.xlsx_metadata_file)
-        collection_sheet = wb.sheet_by_index(1) # Collection sheet
+        collection_sheet = wb.sheet_by_name('Collection') # Collection sheet
 
         # Collection n3 file template
         n3 = """
@@ -94,14 +94,14 @@ class XLSXIngester(IngesterBase):
 
         wb = xlrd.open_workbook(self.xlsx_metadata_file)
 
-        # The "Recordings" sheet
-        recording_sheet = wb.sheet_by_index(2)
+        # The "Files" sheet
+        recording_sheet = wb.sheet_by_name('Files')
 
         # The property names
         tags = map(self.__convert, recording_sheet.row(0))
 
         # The "Speakers" sheet
-        speaker_sheet = wb.sheet_by_index(3)
+        speaker_sheet = wb.sheet_by_name('Speakers')
 
         for row in [recording_sheet.row(i) for i in range(1, recording_sheet.nrows)]:
             item_id = self.__convert(row[0])
