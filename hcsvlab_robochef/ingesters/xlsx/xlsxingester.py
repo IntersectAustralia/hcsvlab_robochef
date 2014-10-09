@@ -143,13 +143,16 @@ class XLSXIngester(IngesterBase):
             for doc in docs:
                 doc = doc.strip()
                 path = os.path.join(self.corpus_dir, doc)
-                # source is a dict
-                source_type = self.__get_filetype(doc)
-                if source_type == 'Text':
-                    source_list.append({'filetype': source_type, 'sourcepath': path, 'rawtext': None, 'text': None})
-                else:
-                    source_list.append({'filetype': source_type, 'sourcepath': path})
-                print "      DOC:" + path
+
+                if os.path.isfile(path):
+                    # source is a dict
+                    source_type = self.__get_filetype(doc)
+                    if source_type == 'Text':
+                        source_list.append({'filetype': source_type, 'sourcepath': path, 'rawtext': None, 'text': None})
+                    else:
+                        source_list.append({'filetype': source_type, 'sourcepath': path})
+                    print "      DOC:" + path
+
             self.__serialise(self.output_dir, item_id, source_list)
 
         print "   ", total, " Items processed"
