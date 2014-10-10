@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import os.path
 import xlrd
 import mimetypes
@@ -14,6 +15,14 @@ class XLSXIngester(IngesterBase):
     metadata = {}
     speakermetadata = {}
     META_DEFAULTS = {'language': 'eng'}
+
+    supported_doc_types = {
+        'audio/x-wav': 'Audio',
+        'audio/mpeg': 'Audio',
+        'text/plain': 'Text',
+        'application/rtf': 'RTF',
+        'video/x-matroska': 'Video'
+    }
 
     def __init__(self, corpus_dir, output_dir, xlsx_metadata_file, manifest_format):
         self.corpus_dir = corpus_dir
@@ -139,19 +148,33 @@ class XLSXIngester(IngesterBase):
             count += 1
             print "   ", count, "of", total, "ITEM:" + item_id
             docs = self.metadata[item_id]["File Name"].split(',')
+
             source_list = []
             for doc in docs:
-                doc = doc.strip()
-                path = os.path.join(self.corpus_dir, doc)
+                doc = doc.strip(" \"\'“”")
 
-                if os.path.isfile(path):
-                    # source is a dict
-                    source_type = self.__get_filetype(doc)
-                    if source_type == 'Text':
-                        source_list.append({'filetype': source_type, 'sourcepath': path, 'rawtext': None, 'text': None})
+                if self.__is_valid_filename(doc):
+                    path = os.path.join(self.corpus_dir, doc)
+
+                    if os.path.isfile(path):
+                        # make sure we can at least read this file
+                        os.stat(path)
+
+                        # source is a dict
+                        source_type = self.__get_filetype(doc)
+
+                        if source_type == None:
+                            print "      WARN:" + path + " is not one of supported types: " +\
+                                  ", ".join(self.supported_doc_types.keys()) + ", ignored"
+                        else:
+                            if source_type == 'Text':
+                                source_list.append({'filetype': source_type,
+                                                    'sourcepath': path, 'rawtext': None, 'text': None})
+                            else:
+                                source_list.append({'filetype': source_type, 'sourcepath': path})
+                            print "      DOC:" + path
                     else:
-                        source_list.append({'filetype': source_type, 'sourcepath': path})
-                    print "      DOC:" + path
+                        print "      WARN:" + path + " is not regular file, ignored"
 
             self.__serialise(self.output_dir, item_id, source_list)
 
@@ -207,12 +230,12 @@ class XLSXIngester(IngesterBase):
         os.mkdir(o_dir)
 
     def __get_filetype(self, filename):
-        types = {
-            'audio/x-wav': 'Audio',
-            'audio/mpeg': 'Audio',
-            'text/plain': 'Text',
-            'application/rtf': 'RTF',
-            'video/x-matroska': 'Video'
-        }
         filetype = mimetypes.guess_type(filename)[0]
-        return types[filetype]
+
+        if self.supported_doc_types.has_key(filetype):
+            return self.supported_doc_types[filetype]
+        else:
+            return None
+
+    def __is_valid_filename(self, str):
+        return len(str) > 0 and re.search(r'\w', str)
