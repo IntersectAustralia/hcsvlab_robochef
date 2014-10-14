@@ -11,6 +11,8 @@ from hcsvlab_robochef.utils.statistics import *
 from hcsvlab_robochef.utils.filehandler import FileHandler
 from hcsvlab_robochef import configmanager
 
+QUOTE_AND_SPACE = " \"\'“”"
+
 class XLSXIngester(IngesterBase):
     metadata = {}
     speakermetadata = {}
@@ -31,6 +33,7 @@ class XLSXIngester(IngesterBase):
         self.xlsx_metadata_file = xlsx_metadata_file or os.path.join(self.corpus_dir, 'metadata.xlsx')
         self.manifest_format = manifest_format or 'turtle'
         self.item_ids = []
+        self.workbook = xlrd.open_workbook(self.xlsx_metadata_file)
 
         # create output dir if not exist
         self.__create_output_dir(self.corpus_dir, self.output_dir)
@@ -39,8 +42,7 @@ class XLSXIngester(IngesterBase):
         """
         Ingest the collection sheet and create corpus.n3 - collection metadata
         """
-        wb = xlrd.open_workbook(self.xlsx_metadata_file)
-        collection_sheet = wb.sheet_by_name('Collection') # Collection sheet
+        collection_sheet = self.workbook.sheet_by_name('Collection') # Collection sheet
 
         # Collection n3 file template
         n3 = """
@@ -101,16 +103,17 @@ class XLSXIngester(IngesterBase):
         be combined with the pathnames to the documents themselves.
         """
 
-        wb = xlrd.open_workbook(self.xlsx_metadata_file)
-
         # The "Files" sheet
-        recording_sheet = wb.sheet_by_name('Files')
+        recording_sheet = self.workbook.sheet_by_name('Files')
 
         # The property names
         tags = map(self.__convert, recording_sheet.row(0))
 
         # The "Speakers" sheet
-        speaker_sheet = wb.sheet_by_name('Speakers')
+        speaker_sheet = self.workbook.sheet_by_name('Speakers')
+
+        # The speaker's attributes
+        speaker_attribute_names = map(self.__convert, speaker_sheet.row(0))
 
         for row in [recording_sheet.row(i) for i in range(1, recording_sheet.nrows)]:
             item_id = self.__convert(row[0])
@@ -123,17 +126,27 @@ class XLSXIngester(IngesterBase):
                 item_metadata[property_name] = property_value
 
             # Collect speaker metadata
-            speaker_id = self.__convert(row[11])
-            speaker_row = self.__look_for_speaker(speaker_id, speaker_sheet)
-            if speaker_row:
-                self.speakermetadata[speaker_id] = {
-                    u'table_person_' + speaker_id: {
-                        "id": speaker_id,
-                        "Gender": self.__convert(speaker_row[1])
+            speaker_ids = item_metadata["Speaker"].split(',')
+
+            for speaker_id in speaker_ids:
+                speaker_id = speaker_id.strip(QUOTE_AND_SPACE)
+
+                if len(speaker_id) == 0: continue
+
+                speaker_row = self.__look_for_speaker(speaker_id, speaker_sheet)
+
+                if speaker_row:
+                    speaker_metadata = { "id": speaker_id }
+                    for i in range(1, speaker_sheet.ncols):
+                        attribute_name = speaker_attribute_names[i].strip()
+                        attribute_value = self.__convert(speaker_row[i]).strip()
+                        speaker_metadata[attribute_name] = attribute_value
+
+                    self.speakermetadata[speaker_id] = {
+                        u'table_person_' + speaker_id: speaker_metadata
                     }
-                }
-            else:
-                print "### WARN: Speaker with id", speaker_id, "Not found."
+                else:
+                    print "### WARN: Speaker with id \"{0}\" not found.".format(speaker_id)
 
             self.metadata[item_id] = item_metadata
 
@@ -151,7 +164,7 @@ class XLSXIngester(IngesterBase):
 
             source_list = []
             for doc in docs:
-                doc = doc.strip(" \"\'“”")
+                doc = doc.strip(QUOTE_AND_SPACE)
 
                 if self.__is_valid_filename(doc):
                     path = os.path.join(self.corpus_dir, doc)
@@ -201,8 +214,12 @@ class XLSXIngester(IngesterBase):
 
         meta = {}
         meta.update(self.metadata[item_id])
-        speaker_id = self.metadata[item_id]["Speaker"]
-        meta.update(self.speakermetadata[speaker_id])
+
+        for k in self.speakermetadata.keys():
+            meta.update(self.speakermetadata[k])
+
+        #speaker_id = self.metadata[item_id]["Speaker"]
+        #meta.update(self.speakermetadata[speaker_id])
 
         return serialiser.serialise_multiple(item_id, source_list, self.corpus_id,
                                               get_map(self.corpus_id), meta, [],
@@ -218,8 +235,12 @@ class XLSXIngester(IngesterBase):
 
     def __convert(self, cell):
         ''' There are no float values in the Excel sheet. Cut hem here to int before converting to unicode. '''
-        if cell.ctype in (2, 3, 4):
+        if cell.ctype == xlrd.XL_CELL_DATE:
+            return unicode(xlrd.xldate.xldate_as_datetime(cell.value, self.workbook.datemode))
+
+        if cell.ctype in (xlrd.XL_CELL_NUMBER, xlrd.XL_CELL_BOOLEAN):
             return unicode(int(cell.value))
+
         return cell.value.encode('utf-8')
 
     def __create_output_dir(self, corpus_dir, output_dir):

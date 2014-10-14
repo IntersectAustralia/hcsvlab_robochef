@@ -296,6 +296,7 @@ class MetadataMapper(FieldMapper):
                 if not baseuri == "": 
                     docid = docmeta['filename']
                     docid = urllib.quote(docid)
+
                     if 'subdir' in metadata:
                       uri = URIRef(baseuri + self.corpusID.lower() + metadata['subdir'] + docid)
                     else:
@@ -303,6 +304,7 @@ class MetadataMapper(FieldMapper):
                         uri = URIRef(baseuri + self.corpusID.lower() + "/" + docid.split("-")[0] + "/" + docid.split("-")[1] + "/" + docid)
                       else:
                         uri = URIRef(baseuri + self.corpusID.lower() + "/" + docid)
+
                     graph.add((docuri, DC.source, URIRef(uri)))
 
                 
@@ -436,7 +438,7 @@ class MetadataMapper(FieldMapper):
         if not metadata.has_key("id"):
             raise Exception("No id for document")
         
-        uri = self.item_source_uri(metadata["id"])
+        uri = self.item_source_uri(urllib.pathname2url(metadata["id"]))
         
         graph.add((uri, RDF.type, FOAF.Document))
         
