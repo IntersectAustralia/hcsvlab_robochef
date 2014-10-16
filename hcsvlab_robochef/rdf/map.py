@@ -412,7 +412,7 @@ class MetadataMapper(FieldMapper):
         if not metadata.has_key("id"):
             raise Exception("No id for speaker")
         
-        speakeruri = self.speaker_uri(metadata["id"])
+        speakeruri = self.speaker_uri(urllib.pathname2url(metadata["id"]))
         
         graph.add((speakeruri, RDF.type, FOAF.Person))
         
