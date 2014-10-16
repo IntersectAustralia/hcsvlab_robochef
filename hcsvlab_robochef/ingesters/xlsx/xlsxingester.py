@@ -246,6 +246,16 @@ class XLSXIngester(IngesterBase):
         # create output directory structure, current is one single dir, should be extensible to a whole dir tree if necessary
         # output_dir by default is corpus_dir/processed if not specified
         o_dir = output_dir or os.path.join(corpus_dir, 'processed')
+
+        if os.path.exists(o_dir):
+            delete = self.__query_yes_no("Output directory exists: {0}, Delete?".format(o_dir))
+
+            if delete:
+                shutil.rmtree(o_dir)
+            else:
+                print "Aborted\nYou can manually delete it or use --output <DIR> to specify another one"
+                sys.exit(0)
+
         # create output dir
         os.mkdir(o_dir)
 
@@ -259,3 +269,36 @@ class XLSXIngester(IngesterBase):
 
     def __is_valid_filename(self, str):
         return len(str) > 0 and re.search(r'\w', str)
+
+    def __query_yes_no(self, question, default = "no"):
+        """Ask a yes/no question via raw_input() and return their answer.
+
+        "question" is a string that is presented to the user.
+        "default" is the presumed answer if the user just hits <Enter>.
+            It must be "yes" (the default), "no" or None (meaning
+            an answer is required of the user).
+
+        The "answer" return value is one of "yes" or "no".
+        """
+        valid = {"yes": True, "y": True, "ye": True, "no": False, "n": False}
+
+        if default is None:
+            prompt = " [y/n] "
+        elif default == "yes":
+            prompt = " [Y/n] "
+        elif default == "no":
+            prompt = " [y/N] "
+        else:
+            raise ValueError("invalid default answer: '%s'" % default)
+
+        while True:
+            sys.stdout.write(question + prompt)
+            choice = raw_input().lower()
+
+            if default is not None and choice == '':
+                return valid[default]
+            elif choice in valid:
+                return valid[choice]
+            else:
+                sys.stdout.write("Please respond with 'yes' or 'no' "
+                                 "(or 'y' or 'n').\n")
