@@ -14,8 +14,6 @@ from hcsvlab_robochef import configmanager
 QUOTE_AND_SPACE = " \"\'“”"
 
 class XLSXIngester(IngesterBase):
-    metadata = {}
-    speakermetadata = {}
     META_DEFAULTS = {'language': 'eng'}
 
     supported_doc_types = {
@@ -34,6 +32,8 @@ class XLSXIngester(IngesterBase):
         self.manifest_format = manifest_format or 'turtle'
         self.item_ids = []
         self.workbook = xlrd.open_workbook(self.xlsx_metadata_file)
+        self.metadata = {}
+        self.speakermetadata = {}
 
         # create output dir if not exist
         self.__create_output_dir(self.corpus_dir, self.output_dir)
@@ -126,6 +126,7 @@ class XLSXIngester(IngesterBase):
                 item_metadata[property_name] = property_value
 
             # Collect speaker metadata
+            self.speakermetadata[item_id] = []
             speaker_ids = item_metadata["Speaker"].split(',')
 
             for speaker_id in speaker_ids:
@@ -142,9 +143,7 @@ class XLSXIngester(IngesterBase):
                         attribute_value = self.__convert(speaker_row[i]).strip()
                         speaker_metadata[attribute_name] = attribute_value
 
-                    self.speakermetadata[speaker_id] = {
-                        u'table_person_' + speaker_id: speaker_metadata
-                    }
+                    self.speakermetadata[item_id].append({ u'table_person_' + speaker_id: speaker_metadata })
                 else:
                     print "### WARN: Speaker with id \"{0}\" not found.".format(speaker_id)
 
@@ -169,10 +168,10 @@ class XLSXIngester(IngesterBase):
                 if self.__is_valid_filename(doc):
                     path = os.path.join(self.corpus_dir, doc)
 
-                    if os.path.isfile(path):
-                        # make sure we can at least read this file
-                        os.stat(path)
+                    # make sure we can at least read this file
+                    os.stat(path)
 
+                    if os.path.isfile(path):
                         # source is a dict
                         source_type = self.__get_filetype(doc)
 
@@ -215,8 +214,8 @@ class XLSXIngester(IngesterBase):
         meta = {}
         meta.update(self.metadata[item_id])
 
-        for k in self.speakermetadata.keys():
-            meta.update(self.speakermetadata[k])
+        for speaker_metadata in self.speakermetadata[item_id]:
+            meta.update(speaker_metadata)
 
         #speaker_id = self.metadata[item_id]["Speaker"]
         #meta.update(self.speakermetadata[speaker_id])
