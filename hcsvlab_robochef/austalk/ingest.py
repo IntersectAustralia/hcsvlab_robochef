@@ -1,5 +1,6 @@
 import os
-import fnmatch
+import re
+import glob
 
 from hcsvlab_robochef.ingest_base import IngestBase
 from hcsvlab_robochef.rdf.namespaces import *
@@ -15,6 +16,15 @@ DOCUMENT_QUERY = """SELECT DISTINCT ?item ?doc
 				   WHERE {
 			   		?item <http://ns.ausnc.org.au/schemas/ausnc_md_model/document> ?doc .
 		   		}"""
+				
+				
+DISPLAY_DOC_QUERY = """SELECT ?item ?doc WHERE {
+        ?item <http://ns.ausnc.org.au/schemas/ausnc_md_model/document> ?doc .
+		?doc <http://ns.austalk.edu.au/channel> "ch6-speaker16" .
+		}"""
+		
+RDF_FORMAT = "nt"
+RDF_OUTPUT_FORMAT = "nt"
 
 class AustalkIngest(IngestBase):
 
@@ -34,10 +44,11 @@ class AustalkIngest(IngestBase):
 		print "    processing files..."
 
 		files_to_process = self.__get_files(srcdir)
-		total = len(files_to_process)
+		total = 0 #len(files_to_process)
 		sofar = 0
 
 		for files_metadata in files_to_process:
+						
 			item_metadata = files_metadata.replace(FILES_FILE_SUFFIX, "")
 			downsampled_doc = files_metadata.replace(FILES_FILE_SUFFIX, DOWNSAMPLED_FILE_SUFFIX)
 
@@ -50,64 +61,74 @@ class AustalkIngest(IngestBase):
 			if not os.path.exists(os.path.join(outdir, subdir)):
 				os.mkdir(os.path.join(outdir, subdir))
 			
-			outfile = os.path.join(outdir, subdir, os.path.basename(item_metadata)).replace(".nt", "%s.rdf" % METADATA_FILE_SUFFIX)
+			outfile = os.path.join(outdir, subdir, os.path.basename(item_metadata)).replace("."+RDF_FORMAT, "%s.rdf" % METADATA_FILE_SUFFIX)
 
 			# concatenate all metadata files
-			concatenate_metadata_files(outfile, item_metadata, downsampled_doc, files_metadata)
-
-			# add in downsampled source
-			add_downsampled_document_source(outfile, downsampled_doc)
+			graph = read_metadata_files(item_metadata)
 			
-			# add in sources for other documents
-			add_other_document_sources(outfile, files_metadata)
-
+			# determine which document will be the display document
+			identify_display_document(graph)
+			
+			# make data URIs point to our own server
+			graph_text = map_data_uris(graph)
+			
+			# output the new graph
+			with open(outfile, "a") as rdf_file:
+				print >> rdf_file, graph_text
+		
+		
 			sofar = sofar + 1
 			print "\033[2K   ", sofar, "of", total, os.path.basename(item_metadata), "\033[A"
-
+			
+				
 		print "\033[2K   ", total, "files processed"
 
 	def ingestDocument(self, srcdir, sourcepath):
 		pass
 
 	def __get_files(self, srcdir):
-		''' This function retrieves a list of files that the Austalk ingest should actually process '''
-		return_files = []
-
+		''' This function generates a sequence of files that 
+		the Austalk ingest should actually process
+		Note this is a generator (using yield)'''
+		
+		item_pattern = "[1-4]_[0-9]+_[123]_[0-9]+_[0-9]+\.nt"
+		
 		for root, dirnames, filenames in os.walk(srcdir):
-			for filename in fnmatch.filter(filenames, '*%s.nt' % FILES_FILE_SUFFIX):
-				return_files.append(os.path.join(root, filename))
+			for filename in filenames:
+				if re.match(item_pattern, filename):
+					yield os.path.join(root, filename)
 
-		return return_files
-
-def concatenate_metadata_files(outfile, item_metadata, downsampled_doc, files_metadata):
-	with open(outfile, "w+") as rdf_file:
-		print >> rdf_file, open(item_metadata, "r").read()
-		print >> rdf_file, open(downsampled_doc, "r").read()
-		print >> rdf_file, open(files_metadata, "r").read()
-
-def add_downsampled_document_source(outfile, downsampled_doc):
-	ds_graph = Graph()
-	ds_graph.parse(downsampled_doc, format="nt")
-
-	res = ds_graph.query(DOCUMENT_QUERY)
-	write_document_results_to_file(outfile, res, True)
-
-def add_other_document_sources(outfile, files_metadata):
-	files_graph = Graph()
-	files_graph.parse(files_metadata, format="nt")
-
-	res = files_graph.query(DOCUMENT_QUERY)
-	write_document_results_to_file(outfile, res)
-
-def write_document_results_to_file(outfile, results, display=False):
+def read_metadata_files(item_metadata):
+	"""Read all metadata files matching the item basename into a single
+	graph, return the graph"""
+	
 	g = Graph()
+	(basename, ext) = os.path.splitext(item_metadata)
+	for filename in glob.glob(basename + "*"):
+		g.parse(filename, format=RDF_FORMAT)
+	
+	return g
+	
+	
+def identify_display_document(graph):
+	"""Find the ch6-speaker16 document for this item and mark it as the 
+	display document by adding a triple to the graph"""
+	
+	
+	results = graph.query(DISPLAY_DOC_QUERY)
 	for row in results:
-		item = row[0]
-		document = row[1]
-		predicate = DC.source
-		obj = document.replace("http://data.austalk.edu.au/", configmanager.get_config("DOCUMENT_BASE_URL") + configmanager.get_config("AUSTALK") + "/")
-		g.add( (document, predicate, Literal(obj)) )
-		if display:
-			g.add( (item, HCSVLAB.display_document, document) )
-	with open(outfile, "a") as rdf_file:
-		print >> rdf_file, g.serialize(format="nt")
+		(item, document) = row
+		graph.add( (item, HCSVLAB.display_document, document) )
+	
+
+def map_data_uris(graph):
+	"""Modify the RDF to change the URI of all data items to our own 
+	configured server.  Return a serialisation of the graph."""
+	
+	document = graph.serialize(format="nt")
+	return document.replace("http://data.austalk.edu.au/", configmanager.get_config("DOCUMENT_BASE_URL") + configmanager.get_config("AUSTALK") + "/")
+
+	# note that this could also map item urls, currently http://id.austalk.edu.au/item/ 
+
+
+
