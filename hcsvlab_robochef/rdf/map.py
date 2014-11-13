@@ -163,10 +163,9 @@ class FieldMapper:
 
         return corpus_speaker_uri(self.corpusID, id)
 
-    def item_source_uri(self, id):
+    def item_source_uri(self, itemID, filename):
         """Generate a URI for the source data of this item"""
-
-        return corpus_source_uri(self.corpusID, id)
+        return corpus_source_uri(self.corpusID, itemID, filename)
 
 
     def mapdict(self, metadata):
@@ -266,7 +265,7 @@ class MetadataMapper(FieldMapper):
         graph = bind_graph(graph)
 
         itemuri = self.item_uri(metadata['sampleid'])
-        sourceuri = self.item_source_uri(metadata['sampleid'])
+        # sourceuri = self.item_source_uri(metadata['sampleid'], metadata['table_document']['filename'])
         corpusuri = self.corpus_uri()
         documents = []
 
@@ -285,7 +284,7 @@ class MetadataMapper(FieldMapper):
             elif key.startswith("table_document"):
                 docmeta = metadata[key]
                 # make a document uri
-                docuri = self.document(docmeta, graph)
+                docuri = self.document(metadata['sampleid'], docmeta, graph)
                 docmeta.update({'uri':docuri})
                 documents.append(docmeta)
                 graph.add((itemuri, AUSNC.document, docuri))  # TODO: what is a document?
@@ -357,7 +356,7 @@ class MetadataMapper(FieldMapper):
           for k, v in metadata:
               if k.startswith("table_document"):
                 docmeta = v
-                docuri = self.document(docmeta, graph)
+                docuri = self.document(metadata['sampleid'], docmeta, graph)
                 docmeta.update({'uri':docuri})
                 documents.append(docmeta)
                 graph.add((itemuri, AUSNC.document, docuri))
@@ -426,7 +425,7 @@ class MetadataMapper(FieldMapper):
 
 
 
-    def document(self, metadata, graph):
+    def document(self, itemID, metadata, graph):
         """Generate the description of a document from a metadata dictionary
         adds triples to the item's graph, returns the document URI"""
 
@@ -435,8 +434,7 @@ class MetadataMapper(FieldMapper):
 
         if not metadata.has_key("id"):
             raise Exception("No id for document")
-
-        uri = self.item_source_uri(metadata["id"])
+        uri = self.item_source_uri(itemID, metadata["filename"])
 
         graph.add((uri, RDF.type, FOAF.Document))
 

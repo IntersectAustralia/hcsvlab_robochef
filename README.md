@@ -16,19 +16,15 @@ These instructions assume you have [Homebrew](http://mxcl.github.com/homebrew/) 
 #### AntiWord ####
 
 ```
+brew update
 brew install antiword
-```
-
-Unfortunately, Homebrew doesn't install the resources correctly so you will have to fix this manually:
-
-```
-mv /usr/local/share/antiword/Resources/* /usr/local/share/antiword
-rmdir /usr/local/share/antiword/Resources
 ```
 
 #### Xpdf ####
 
+Note: You may have to install XQuartz from https://xquartz.macosforge.org/landing/ first.
 ```
+
 brew install xpdf
 ```
 
@@ -80,11 +76,8 @@ You will make your life a million times easier if you also install VirtualEnv
 ##### SetupTools and VirtualEnv #####
 
 ```
-$ curl -O https://pypi.python.org/packages/source/s/setuptools/setuptools-0.7.2.tar.gz
-$ tar xvf setuptools-0.7.2.tar.gz 
-$ cd setuptools-0.7.2
-$ sudo /usr/local/bin/python2.7 ez_setup.py 
-$ sudo /usr/local/bin/easy_install-2.7 virtualenv
+$ curl https://bootstrap.pypa.io/ez_setup.py -o - | sudo python
+$ easy_install-2.7 virtualenv
 ```
 
 Next, create a VirtualEnv for RoboChef in its directory:

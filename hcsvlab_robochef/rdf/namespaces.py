@@ -18,7 +18,7 @@ RDF = Namespace(u"http://www.w3.org/1999/02/22-rdf-syntax-ns#")
 RDFS = Namespace(u"http://www.w3.org/2000/01/rdf-schema#")
 OWL = Namespace(u"http://www.w3.org/2002/07/owl#")
 XSD = Namespace(u"http://www.w3.org/2001/XMLSchema#")
-ALVEO = Namespace(u"http://alveo.edu.au/vocabulary#")
+ALVEO = Namespace(u"http://alveo.edu.au/vocabulary/")
 
 # Namespaces we control
 # SCHEMA is the namespace for all schema
@@ -28,7 +28,7 @@ SCHEMA = Namespace(u"http://ns.ausnc.org.au/schemas/")
 AUSNC = Namespace(SCHEMA[u"ausnc_md_model/"])
 
 # corpus is used as a prefix for all corpus items
-CORPUS = Namespace(u"http://ns.ausnc.org.au/corpora/")
+CORPUS = Namespace(u"https://app.alveo.edu.au/catalog/")
 
 # annotation namespaces
 ANNOTATION = Namespace(SCHEMA[u'annotation/'])
@@ -76,7 +76,7 @@ def corpus_uri(corpusID):
     """Given a corpus identifier, return the right
     corpus URI
 
-    corpusURI is http://ns.ausnc.org.au/corpora/braided/
+    corpusURI is https://app.alveo.edu.au/catalog/braided/
 
     """
 
@@ -87,10 +87,10 @@ def corpus_item_uri(corpusID, itemID):
     """Given a corpus and item identifier, return
     a URI for the item
 
-    http://ns.ausnc.org.au/corpus/<corpusid>/items/<itemid>
+    https://app.alveo.edu.au/catalog/<corpusid>/<itemid>
     """
 
-    return corpus_prefix_namespace(corpusID)["/items/"+itemID]
+    return corpus_prefix_namespace(corpusID)["/"+itemID]
 
 
 def corpus_speaker_uri(corpusID, speakerID):
@@ -98,10 +98,12 @@ def corpus_speaker_uri(corpusID, speakerID):
 
     return  corpus_prefix_namespace(corpusID)["/person/"+speakerID]
 
-def corpus_source_uri(corpusID, sourceID):
-    """Generate a URI for the source data of this item"""
+def corpus_source_uri(corpusID, itemID, docFilename):
+    """Generate a URI for the source data of this item
 
-    return corpus_prefix_namespace(corpusID)["/source/"+sourceID]
+    https://app.alveo.edu.au/catalog/<corpusid>/<itemid>/document/<docFilename>
+    """
+    return corpus_prefix_namespace(corpusID)["/"+itemID+"/document/"+docFilename]
 
 
 def corpus_annotation_uri(corpusID, annotID):
