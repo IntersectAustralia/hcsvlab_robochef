@@ -18,7 +18,7 @@ class UnitTest(unittest.TestCase):
   configmanager.configinit()
   corpus_basedir = configmanager.get_config("CORPUS_BASEDIR", "../input/")
   griffith = GriffithIngest()
-  griffith.setMetaData(corpus_basedir + "griffith/metadata")
+  # griffith.setMetaData(corpus_basedir + "griffith/metadata")
 
   def test_meta_extract(self):
      # We do not assert anything here, we call this to make sure it runs and does not fall over

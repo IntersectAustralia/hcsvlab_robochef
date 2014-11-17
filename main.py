@@ -139,7 +139,7 @@ def main():
         elif c == "austalk":
             print "converting austalk"
             austalk = AustalkIngest()
-            austalk.ingestCorpus(corpus_basedir + "austalk", output_dir + "austalk")
+            austalk.ingestCorpus(corpus_basedir, output_dir + "austalk")
             for item in os.listdir(output_dir + "austalk"):
                 subdir = os.path.join(output_dir + "austalk", item)
                 if os.path.isdir(subdir):
