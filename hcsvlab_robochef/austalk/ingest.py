@@ -132,7 +132,12 @@ def write_document_results_to_file(graph):
         mappings[document] = subject
 
         graph.add((Namespace(subject), DC.source, Literal(obj)))
-        graph.add((Namespace(subject), DC.extent, Literal(os.path.getsize(urlparse.urlparse(obj).path))))
+        file_path = urlparse.urlparse(obj).path
+        if os.path.exists(file_path):
+            graph.add((Namespace(subject), DC.extent, Literal(os.path.getsize(file_path))))
+        else:
+            print "Missing files - " + file_path
+            continue
 
     results = graph.query(DOCUMENT_QUERY)
     for row in results:
@@ -140,7 +145,12 @@ def write_document_results_to_file(graph):
         obj = source.replace("http://data.austalk.edu.au/", configmanager.get_config("DOCUMENT_BASE_URL") + configmanager.get_config("AUSTALK") + "/")
         subject = document
         graph.set((Namespace(subject), DC.source, Literal(obj)))
-        graph.add((Namespace(subject), DC.extent, Literal(os.path.getsize(urlparse.urlparse(obj).path))))
+        file_path = urlparse.urlparse(obj).path
+        if os.path.exists(file_path):
+            graph.add((Namespace(subject), DC.extent, Literal(os.path.getsize(file_path))))
+        else:
+            print "Missing files - " + file_path
+            continue
 
     return mappings
 
