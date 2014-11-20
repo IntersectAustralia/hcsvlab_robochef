@@ -33,7 +33,7 @@ DISPLAY_DOC_QUERY = """SELECT ?item ?doc WHERE {
         }"""
 
 RDF_FORMAT = "nt"
-RDF_OUTPUT_FORMAT = "nt"
+RDF_OUTPUT_FORMAT = "turtle"
 
 
 class AustalkIngest(IngestBase):
@@ -159,8 +159,8 @@ def identify_display_document(graph):
 def map_data_uris(graph, document_mapping):
     """Modify the RDF to change the URI of all data items to our own
     configured server.  Return a serialisation of the graph."""
-
-    document = graph.serialize(format="nt")
+    bind_graph(graph)
+    document = graph.serialize(format=RDF_OUTPUT_FORMAT)
     for k in document_mapping.keys():
         document = document.replace(k, document_mapping[k])
 

@@ -143,7 +143,7 @@ def main():
             for item in os.listdir(output_dir + "austalk"):
                 subdir = os.path.join(output_dir + "austalk", item)
                 if os.path.isdir(subdir):
-                    austalk.create_collection_manifest(subdir, "nt") 
+                    austalk.create_collection_manifest(subdir, "turtle")
 
         elif c == "rirusyd":
             print "converting Room Impulse Response"
