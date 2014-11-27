@@ -20,7 +20,6 @@ from hcsvlab_robochef.jakartan_indonesian.ingest import *
 from hcsvlab_robochef.llc.ingest import *
 
 
-
 def main():
     """
     Primary application entry point
@@ -112,8 +111,14 @@ def main():
         elif c == "paradisec":
             print "converting paradisec"
             paradisec = ParadisecIngest()
-            paradisec.ingestCorpus(corpus_basedir + "paradisec", output_dir + "paradisec")
-            paradisec.create_collection_manifest(output_dir + "paradisec", "turtle")
+
+            metadata_path = output_dir + "paradisec"
+            paradisec.ingestCorpus(corpus_basedir + "paradisec", metadata_path)
+
+            for item in os.listdir(metadata_path):
+                subdir = os.path.join(metadata_path, item)
+                if os.path.isdir(subdir):
+                    paradisec.create_collection_manifest(subdir, "turtle")
 
         elif c == "eopas_test":
             print "converting eopas_test"
@@ -139,9 +144,14 @@ def main():
         elif c == "austalk":
             print "converting austalk"
             austalk = AustalkIngest()
-            austalk.ingestCorpus(corpus_basedir, output_dir + "austalk")
-            for item in os.listdir(output_dir + "austalk"):
-                subdir = os.path.join(output_dir + "austalk", item)
+
+            metadata_path = os.path.join(output_dir, "austalk/metadata")
+            if not os.path.exists(metadata_path):
+                os.mkdir(metadata_path)
+
+            austalk.ingestCorpus(corpus_basedir, metadata_path)
+            for item in os.listdir(metadata_path):
+                subdir = os.path.join(metadata_path, item)
                 if os.path.isdir(subdir):
                     austalk.create_collection_manifest(subdir, "turtle")
 
@@ -156,25 +166,25 @@ def main():
         elif c == "mbep":
             print "converting Macquarie Battery of Emotional Prosody"
             mbep = MbepIngest()
-            mbep.setMetaData(corpus_basedir+"mbep/mq_emotional.xlsx")
+            mbep.setMetaData(corpus_basedir + "mbep/mq_emotional.xlsx")
             mbep.copy_collection_metadata(corpus_basedir, output_dir, "mbep.n3", "mbep.n3")
-            mbep.ingestCorpus(corpus_basedir+"mbep", output_dir+"mbep")
+            mbep.ingestCorpus(corpus_basedir + "mbep", output_dir + "mbep")
             mbep.create_collection_manifest(output_dir + "mbep", "turtle")
 
         elif c == "jakartan_indonesian":
             print "converting Jakartan Idonesian"
             jakartan = JakartanIndonesianIngest()
-            jakartan.setMetaData(corpus_basedir+"jakartan_indonesian/JakartanIndonesian-modified.xlsx")
+            jakartan.setMetaData(corpus_basedir + "jakartan_indonesian/JakartanIndonesian-modified.xlsx")
             jakartan.copy_collection_metadata(corpus_basedir, output_dir, "jakartan_indonesian.n3", "jakartan_indonesian.n3")
-            jakartan.ingestCorpus(corpus_basedir+"jakartan_indonesian", output_dir+"jakartan_indonesian")
+            jakartan.ingestCorpus(corpus_basedir + "jakartan_indonesian", output_dir + "jakartan_indonesian")
             jakartan.create_collection_manifest(output_dir + "jakartan_indonesian", "turtle")
 
         elif c == "llc":
             print "converting LLC"
             llc = LLCIngest()
-            llc.setMetaData(corpus_basedir+"LLC/LectureCorpus_OnlineFiles_Mar25 2014.xlsx")
+            llc.setMetaData(corpus_basedir + "LLC/LectureCorpus_OnlineFiles_Mar25 2014.xlsx")
             llc.copy_collection_metadata(corpus_basedir, output_dir, "llc.n3", "llc.n3")
-            llc.ingestCorpus(corpus_basedir+"LLC", output_dir+"llc")
+            llc.ingestCorpus(corpus_basedir + "LLC", output_dir + "llc")
             llc.create_collection_manifest(output_dir + "llc", "turtle")
 
 

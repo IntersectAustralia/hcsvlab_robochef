@@ -100,7 +100,6 @@ def corpus_speaker_uri(corpusID, speakerID):
 
 def corpus_source_uri(corpusID, itemID, docFilename):
     """Generate a URI for the source data of this item
-
     https://app.alveo.edu.au/catalog/<corpusid>/<itemid>/document/<docFilename>
     """
     return corpus_prefix_namespace(corpusID)["/"+itemID+"/document/"+docFilename]

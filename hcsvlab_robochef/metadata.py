@@ -43,13 +43,15 @@ def xml2dict(xml_tree, pre = "", ignore_root = False):
   return d
 
 
-def xml2tuplelist(xml_tree, ignorelist=[]):
-  result = []
+def xml2paradisecdict(xml_tree, ignorelist=[]):
+  result = {}
   for node in xml_tree.iter():
     __strip_qual__(node)
     __flatten_attr__(node)
     if node.tag not in ignorelist:
-      result.append((node.tag, node.text.strip()));
+
+      if node.text and not result.get(node.tag, False):
+        result[node.tag] = node.text.strip()
   return result
       
 

@@ -2,6 +2,7 @@ import sys
 import os
 import json
 import fnmatch
+import re
 from rdflib import Graph
 import rdfextras
 
@@ -27,12 +28,14 @@ DOCUMENT_QUERY = """SELECT DISTINCT ?type ?identifier ?source
 
 def create_manifest(srcdir, format):
     rdf_files = get_files(srcdir)
-    manifest_hash = {"collection_name":extract_manifest_collection(rdf_files[0], format), "files":{}}
-    
-    total = len(rdf_files)
+
     sofar = 0
+    manifest_hash = {}
 
     for rdf in rdf_files:
+        if sofar == 0:
+            manifest_hash = {"collection_name":extract_manifest_collection(rdf, format), "files":{}}
+
         filename = os.path.basename(rdf)
 
         graph = Graph()
@@ -54,21 +57,21 @@ def create_manifest(srcdir, format):
         manifest_hash["files"][filename] = entry
 
         sofar = sofar + 1
-        print "\033[2K   ", sofar, "of", total, os.path.basename(rdf), "\033[A"
+        print "\033[2K   ", sofar, os.path.basename(rdf), "\033[A"
 
     with open(os.path.join(srcdir, "manifest.json"), 'w') as outfile:
         json.dump(manifest_hash, outfile, indent=True)
 
-    print "\033[2K   ", total, "files processed"
+    print "\033[2K   ", sofar, "files processed"
 
 def get_files(srcdir):
-    return_files = []
+
+    item_pattern = ".*-metadata.rdf"
 
     for root, dirnames, filenames in os.walk(srcdir):
-        for filename in fnmatch.filter(filenames, '*-metadata.rdf'):
-            return_files.append(os.path.join(root, filename))
-
-    return return_files
+        for filename in filenames:
+            if re.match(item_pattern, filename):
+                yield os.path.join(root, filename)
 
 def extract_manifest_collection(rdf_file, format):
     graph = Graph()

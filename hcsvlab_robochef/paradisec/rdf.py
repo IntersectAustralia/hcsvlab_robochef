@@ -1,8 +1,6 @@
 from hcsvlab_robochef.rdf.map import *
 
-
 PARADISEC = "PARADISEC"
-PARADISECNS = corpus_property_namespace(PARADISEC)
 
 paradisecSpeakerMap = FieldMapper(AUSNC)
 paradisecSpeakerMap.add('name', mapto=FOAF.name)

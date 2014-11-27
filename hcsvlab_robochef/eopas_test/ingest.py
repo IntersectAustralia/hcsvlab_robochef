@@ -69,7 +69,7 @@ class EopasTestIngest(IngestBase):
     """ Read and process a corpus document """
   
     xml_tree = self.__load_xml_tree(sourcepath)
-    meta_dict = metadata.xml2tuplelist(xml_tree, ['olac', 'metadata'])
+    meta_dict = metadata.xml2paradisecdict(xml_tree, ['olac', 'metadata'])
     self.__get_documents(meta_dict)
     self.__get_people(meta_dict)
     return meta_dict

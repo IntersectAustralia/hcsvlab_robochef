@@ -298,8 +298,8 @@ class MetadataMapper(FieldMapper):
                     if 'subdir' in metadata:
                       uri = URIRef(baseuri + self.corpusID.lower() + metadata['subdir'] + docid)
                     else:
-                      if self.corpusID.lower() == "paradisec":
-                        uri = URIRef(baseuri + self.corpusID.lower() + "/" + docid.split("-")[0] + "/" + docid.split("-")[1] + "/" + docid)
+                      if self.corpusID.lower().starts_with("paradisec"):
+                        uri = URIRef(baseuri + "paradisec" + "/" + docid.split("-")[0] + "/" + docid.split("-")[1] + "/" + docid)
                       else:
                         uri = URIRef(baseuri + self.corpusID.lower() + "/" + docid)
                     graph.add((docuri, DC.source, URIRef(uri)))
@@ -349,14 +349,15 @@ class MetadataMapper(FieldMapper):
         graph = bind_graph(graph)
         documents = []
 
-        itemuris = [v for k,v in metadata if 'URI' in k]
-
-        if itemuris:
-          itemuri = Namespace(itemuris[0])
-          for k, v in metadata:
+        uri = metadata.get('URI', None)
+        identifier = metadata['identifier']
+        if uri:
+          itemuri = self.item_uri(identifier)
+          for k in metadata.keys():
+              v = metadata[k]
               if k.startswith("table_document"):
                 docmeta = v
-                docuri = self.document(metadata['sampleid'], docmeta, graph)
+                docuri = self.document(identifier, docmeta, graph)
                 docmeta.update({'uri':docuri})
                 documents.append(docmeta)
                 graph.add((itemuri, AUSNC.document, docuri))
@@ -366,9 +367,8 @@ class MetadataMapper(FieldMapper):
                     docid = urllib.quote(docid)
                     if 'subdir' in metadata:
                       uri = URIRef(baseuri + self.corpusID.lower() + metadata['subdir'] + docid)
-                    elif self.corpusID.lower() == "paradisec":
-                      subdir = docid.split("-")[0] + "/" + docid.split("-")[1] + "/"
-                      uri = URIRef(baseuri + self.corpusID.lower() + "/" + subdir + docid)
+                    elif self.corpusID.lower().startswith("paradisec"):
+                      uri = URIRef(baseuri + "paradisec" + "/" + docid.split("-")[0] + "/" + docid.split("-")[1] + "/" + docid)
                     else:
                       uri = URIRef(baseuri + self.corpusID.lower() + "/" + docid)
                     graph.add((docuri, DC.source, URIRef(uri)))
