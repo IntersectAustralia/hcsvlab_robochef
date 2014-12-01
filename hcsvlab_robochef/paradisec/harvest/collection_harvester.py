@@ -3,7 +3,6 @@ import os
 import urllib
 import urllib2
 import datetime
-import codecs
 from xml.dom.minidom import *
 
 # function for return dom response after parsting oai-pmh URL
@@ -39,10 +38,10 @@ def oaipmh_resumptionToken(URL):
 def write_xml(node, output_dir):
     doc = Document()
     new_node = node.cloneNode(True)
-    identifiers = new_node.getElementsByTagName('dc:identifier')
-    name = identifiers.item(0).firstChild.nodeValue.strip()
+    identifiers = new_node.getElementsByTagName('identifier')
+    name = identifiers.item(0).firstChild.nodeValue.split("/")[-1]
     doc.appendChild(new_node)
-    outpath = os.path.join(output_dir,"items",name + '.xml')
+    outpath = os.path.join(output_dir,"collections","paradisec-" + name + '.xml')
     if not os.path.exists(os.path.dirname(outpath)):
         os.makedirs(os.path.dirname(outpath))
     outfile = open(outpath, 'w')
@@ -51,14 +50,15 @@ def write_xml(node, output_dir):
 #
 # main code
 #
+
 if len(sys.argv) >= 2:
     output_dir = sys.argv[1]
 else:
-    print "Usage: python harvester.py path_to_output"
+    print "Usage: python collection_harvester.py path_to_output"
     exit()
 
-getRecordsURL = 'http://catalog.paradisec.org.au/oai/item?verb=ListRecords&'
-resumptionToken = "metadataPrefix=olac"
+getRecordsURL = 'http://catalog.paradisec.org.au/oai/collection?verb=ListRecords&'
+resumptionToken = "metadataPrefix=rif"
 
 # loop parse phase
 while resumptionToken != "":
@@ -67,14 +67,13 @@ while resumptionToken != "":
     oaipmhXML = oaipmh_response(getRecordsURLLoop)
     for node in oaipmhXML.getElementsByTagName('record'):
         ident = node.getElementsByTagName('header').item(0).getElementsByTagName('identifier').item(0).firstChild.nodeValue
-        rights = node.getElementsByTagName('dc:rights')[0].firstChild.nodeValue
+        rights = node.getElementsByTagName('accessRights')[0].firstChild.nodeValue
 
-        # only take paradisec items and those where the rights are 'Open'
-        if 'paradisec' in ident and 'Open' in rights:
+        # only take paradisec collections
+        if 'paradisec' in ident:
             write_xml(node.getElementsByTagName('metadata').item(0), output_dir)
         else:
             print "Rejecting", ident
-
     newToken = oaipmh_resumptionToken(getRecordsURLLoop)
     if newToken != "":
         resumptionToken = urllib.urlencode({'resumptionToken': newToken})

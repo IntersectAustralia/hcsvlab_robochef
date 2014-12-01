@@ -1,22 +1,21 @@
 
 Scripts to harvest Paradisec metadata from their OAI-PMH feed at
 http://catalog.paradisec.org.au/oai/item?verb=ListRecords&metadataPrefix=olac
-and prep it for RoboCheffing.
+http://catalog.paradisec.org.au/oai/collection?verb=ListRecords&metadataPrefix=rif
+and prep it for RoboChefing.
 
 harvester.py:
-  Pulls metadata from the Paradisec catalog & produces XML files for
-  each page of data retrieved.
+  Pulls metadata from the Paradisec catalog & produces item OLAC XML files for
+  each page of data retrieved. This saves the xml files into argv[1]/items/
 
-split.py:
-  Splits up the files retrieved by the harvester script to produce one xml
-  per item.
+collection_harvester.py:
+  Pulls metadata from the Paradisec catalog & produces collection RIF-CS XML files for
+  each page of data retrieved. This saves the xml files into argv[1]/collections/
 
 This needs scripting, but can be run like:
 
-$ python harvester.py
+$ python harvester.py /data/raw/paradisec/
+$ python collection_harvester.py /data/raw/paradisec/
 
-$ ls paradisec-olac-metadata-page-*.xml | while read file
-> do
->  echo "Processing $file"
->  python split.py $file
-> done
+Afterwords, run the Paradisec ingest on argv[1]
+

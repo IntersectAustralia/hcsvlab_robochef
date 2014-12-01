@@ -1,7 +1,6 @@
 from hcsvlab_robochef.annotations import *
 from hcsvlab_robochef.ingest_base import IngestBase
 from hcsvlab_robochef.rdf.map import *
-from hcsvlab_robochef.utils.filehandler import *
 from hcsvlab_robochef.utils.serialiser import *
 from hcsvlab_robochef.utils.statistics import *
 from rdf import paradisecMap
@@ -12,6 +11,7 @@ import urllib
 import re
 from collections import Counter
 
+from rdflib.term import Literal
 
 class ParadisecIngest(IngestBase):
     olac_role_map = {'annotator': OLAC.annotator, 'author': OLAC.author, 'compiler': OLAC.compiler,
@@ -36,32 +36,59 @@ class ParadisecIngest(IngestBase):
         print "    processing files..."
 
         files_to_process = self.__get_files(srcdir)
-        total = len(files_to_process)
         sofar = 0
 
         for f in files_to_process:
-            meta_dict = self.ingestDocument(srcdir, f)
-            corpus_suffix = meta_dict.pop('corpus_suffix')
-            outfile = f.replace(srcdir, outdir + "/" + corpus_suffix, 1)
+            if "paradisec-" in os.path.basename(f):
+                meta_dict = self.ingestCollection(srcdir, f)
+                uri_ref = URIRef(meta_dict['uri'])
+                metadata_graph = Graph(identifier=uri_ref)
+                metadata_graph.bind('paradisec', uri_ref)
+                bind_graph(metadata_graph)
 
-            try:
-                os.makedirs(os.path.dirname(outfile))
-            except:
-                pass
-            sampleid = corpus_suffix + "-" + meta_dict['identifier']
-            serialiser = MetaSerialiser()
-            serialiser.serialise(os.path.dirname(outfile), sampleid, paradisecMap, meta_dict, self.identify_documents, True)
+                metadata_graph.add((uri_ref, RDF.type, DCMITYPE.Collection))
+                metadata_graph.add((uri_ref, DC.title, Literal(meta_dict['namePart'])))
+                metadata_graph.add((uri_ref, DC.description, Literal(meta_dict.get('brief'), "")))
+                metadata_graph.add((uri_ref, DC.bibliographicCitation, Literal(meta_dict['fullCitation'])))
+                metadata_graph.add((uri_ref, DC.creator, Literal(meta_dict['fullCitation'].split(" (", 1)[0])))
+                metadata_graph.add((uri_ref, DC.rights, Literal(meta_dict['accessRights'])))
+
+                serializer = plugin.get('turtle', Serializer)(metadata_graph)
+                outfile = open(os.path.abspath(os.path.join(outdir, "paradisec-" + meta_dict['corpus_suffix'].lower() + ".n3")), 'w')
+                serializer.serialize(outfile, encoding='utf-8')
+                outfile.close()
+            else:
+                meta_dict = self.ingestDocument(srcdir, f)
+
+                corpus_suffix = meta_dict.pop('corpus_suffix')
+                subdir = os.path.join(outdir, corpus_suffix)
+
+                try:
+                    os.makedirs(subdir)
+                except:
+                    pass
+                sampleid = corpus_suffix + "-" + meta_dict['identifier']
+                serialiser = MetaSerialiser()
+                serialiser.serialise(subdir, sampleid, paradisecMap, meta_dict, self.identify_documents, True)
 
             sofar = sofar + 1
-            print "\033[2K   ", sofar, "of", total, f, "\033[A"
+            print "\033[2K   ", sofar, " ", f, "\033[A"
 
-        print "\033[2K   ", total, "files processed"
+        print "\033[2K   ", sofar, "files processed"
 
 
-    def setMetaData(self, rcdir):
+    def setMetaData(self, srcdir):
         ''' Loads the meta data for use during ingest '''
         pass
 
+    def ingestCollection(self, srcdir, sourcepath):
+        """ Read and process a corpus document """
+
+        xml_tree = self.__load_xml_tree(sourcepath)
+        meta_dict = metadata.xml2paradisecdict(xml_tree, ignorelist=['olac', 'metadata'])
+        corpus_suffix = meta_dict['uri'].split("/")[-1]
+        meta_dict['corpus_suffix'] = corpus_suffix
+        return meta_dict
 
     def ingestDocument(self, srcdir, sourcepath):
         """ Read and process a corpus document """
@@ -132,12 +159,12 @@ class ParadisecIngest(IngestBase):
 
 
     def __get_files(self, srcdir):
-        ''' This function retrieves a list of files that the HCSvLab ingest should actually process '''
-        filehandler = FileHandler()
+        item_pattern = "^.+\.xml"
 
-        files = filehandler.getFiles(srcdir, r'^.+\.xml$')
-        return_files = [os.path.join(srcdir, f) for f in files]
-        return return_files
+        for root, dirnames, filenames in os.walk(srcdir):
+            for filename in filenames:
+                if re.match(item_pattern, filename):
+                    yield os.path.join(root, filename)
 
     def __tuplelist2dict__(self, tuplelist):
         result = dict()
