@@ -67,13 +67,15 @@ while resumptionToken != "":
     oaipmhXML = oaipmh_response(getRecordsURLLoop)
     for node in oaipmhXML.getElementsByTagName('record'):
         ident = node.getElementsByTagName('header').item(0).getElementsByTagName('identifier').item(0).firstChild.nodeValue
-        rights = node.getElementsByTagName('dc:rights')[0].firstChild.nodeValue
-
-        # only take paradisec items and those where the rights are 'Open'
-        if 'paradisec' in ident and 'Open' in rights:
-            write_xml(node.getElementsByTagName('metadata').item(0), output_dir)
+        if len(node.getElementsByTagName('dc:rights')):
+            rights = node.getElementsByTagName('dc:rights')[0].firstChild.nodeValue
+            # only take paradisec items and those where the rights are 'Open'
+            if 'paradisec' in ident and 'Open' in rights:
+                write_xml(node.getElementsByTagName('metadata').item(0), output_dir)
+            else:
+                print "Rejecting", ident
         else:
-            print "Rejecting", ident
+            print "Rejecting", ident, "due to absence of dc:rights"
 
     newToken = oaipmh_resumptionToken(getRecordsURLLoop)
     if newToken != "":
