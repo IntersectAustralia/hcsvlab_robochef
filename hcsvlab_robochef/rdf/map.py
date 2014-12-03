@@ -1,5 +1,6 @@
 """Mapping property names and values for metadata and annotation ingest"""
-
+import os
+import urlparse
 
 from rdflib import Namespace, Graph, Literal
 from rdflib.term import URIRef
@@ -303,7 +304,12 @@ class MetadataMapper(FieldMapper):
                       else:
                         uri = URIRef(baseuri + self.corpusID.lower() + "/" + docid)
                     graph.add((docuri, DC.source, URIRef(uri)))
-
+                    file_path = urlparse.urlparse(uri).path
+                    if os.path.exists(file_path):
+                        graph.add((docuri, DC.extent, Literal(os.path.getsize(file_path))))
+                    else:
+                        print "Missing files - " + file_path
+                        continue
 
             elif  metadata[key] != '':
                 # convert and add the property/value
@@ -372,6 +378,13 @@ class MetadataMapper(FieldMapper):
                     else:
                       uri = URIRef(baseuri + self.corpusID.lower() + "/" + docid)
                     graph.add((docuri, DC.source, URIRef(uri)))
+                    file_path = urlparse.urlparse(uri).path
+                    if os.path.exists(file_path):
+                        graph.add((docuri, DC.extent, Literal(os.path.getsize(file_path))))
+                    else:
+                        print "Missing files - " + file_path
+                        continue
+
               elif k.startswith("table_person"):
                 speakermeta = v
                 speakeruri = self.speaker(speakermeta, graph)
