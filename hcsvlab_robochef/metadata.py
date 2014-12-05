@@ -49,11 +49,13 @@ def xml2paradisecdict(xml_tree, ignorelist=[]):
     __strip_qual__(node)
     __flatten_attr__(node)
     if node.tag not in ignorelist:
+      if node.text:
+        if result.get(node.tag, False):
+            result[node.tag].append(node.text.strip())
+        else:
+            result[node.tag] = [node.text.strip()]
 
-      if node.text and not result.get(node.tag, False):
-        result[node.tag] = node.text.strip()
   return result
-      
 
 def get_on_path(elts, d):
   """

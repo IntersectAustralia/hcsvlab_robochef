@@ -390,9 +390,15 @@ class MetadataMapper(FieldMapper):
                 speakeruri = self.speaker(speakermeta, graph)
                 graph.add((itemuri, speakermeta['role'], speakeruri))
               else:
-                for (prop, value) in self.map(k, v):
-                    if prop:
-                        graph.add((itemuri, prop, value))
+                if isinstance(v, list):
+                    for value in v:
+                        for (prop, subject) in self.map(k, value):
+                            if prop:
+                                graph.add((itemuri, prop, subject))
+                else:
+                    for (prop, subject) in self.map(k, v):
+                        if prop:
+                            graph.add((itemuri, prop, subject))
 
           corpusuri = self.corpus_uri()
           graph.add((itemuri, RDF.type, AUSNC.AusNCObject))

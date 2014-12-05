@@ -47,11 +47,11 @@ class ParadisecIngest(IngestBase):
                 bind_graph(metadata_graph)
 
                 metadata_graph.add((uri_ref, RDF.type, DCMITYPE.Collection))
-                metadata_graph.add((uri_ref, DC.title, Literal(meta_dict['namePart'])))
-                metadata_graph.add((uri_ref, DC.description, Literal(meta_dict.get('brief'), "")))
-                metadata_graph.add((uri_ref, DC.bibliographicCitation, Literal(meta_dict['fullCitation'])))
-                metadata_graph.add((uri_ref, DC.creator, Literal(meta_dict['fullCitation'].split(" (", 1)[0])))
-                metadata_graph.add((uri_ref, DC.rights, Literal(meta_dict['accessRights'])))
+                metadata_graph.add((uri_ref, DC.title, Literal(meta_dict['namePart'][0])))
+                metadata_graph.add((uri_ref, DC.description, Literal(meta_dict.get('brief', [""])[0])))
+                metadata_graph.add((uri_ref, DC.bibliographicCitation, Literal(meta_dict['fullCitation'][0])))
+                metadata_graph.add((uri_ref, DC.creator, Literal(meta_dict['fullCitation'][0].split(" (", 1)[0])))
+                metadata_graph.add((uri_ref, DC.rights, Literal(meta_dict['accessRights'][0])))
 
                 serializer = plugin.get('turtle', Serializer)(metadata_graph)
                 outfile = open(os.path.abspath(os.path.join(outdir, "paradisec-" + meta_dict['corpus_suffix'].lower() + ".n3")), 'w')
@@ -86,7 +86,7 @@ class ParadisecIngest(IngestBase):
 
         xml_tree = self.__load_xml_tree(sourcepath)
         meta_dict = metadata.xml2paradisecdict(xml_tree, ignorelist=['olac', 'metadata'])
-        corpus_suffix = meta_dict['uri'].split("/")[-1]
+        corpus_suffix = meta_dict['uri'][0].split("/")[-1]
         meta_dict['corpus_suffix'] = corpus_suffix
         return meta_dict
 
@@ -97,8 +97,11 @@ class ParadisecIngest(IngestBase):
         meta_dict = metadata.xml2paradisecdict(xml_tree, ignorelist=['olac', 'metadata'])
         self.__get_documents(meta_dict)
         self.__get_people(meta_dict)
-        corpus_suffix, identifier = meta_dict['identifier'].split("-", 1)
-        meta_dict['identifier'] = identifier
+        for identifier in meta_dict['identifier']:
+            if re.match("^\w*-.*$",identifier):
+                corpus_suffix, short_uri = identifier.split("-", 1)
+
+        meta_dict['identifier'] = short_uri
         meta_dict['corpus_suffix'] = corpus_suffix
         paradisecMap.corpusID = "PARADISEC-" + corpus_suffix
         return meta_dict
@@ -130,20 +133,21 @@ class ParadisecIngest(IngestBase):
         return (indexable, display)
 
     def __get_documents(self, meta_dict):
-        v = meta_dict.pop('tableOfContents', None)
-        if v is not None:
-            filetype = self.__get_type(v)
-            file_meta = {'id': v, 'filename': v, 'filetype': filetype, 'documenttitle': v}
-            meta_dict['table_document_' + v] = file_meta
+        docs = meta_dict.pop('tableOfContents', None)
+        if docs is not None:
+            for v in docs:
+                meta_dict['table_document_' + v] = {'id': v, 'filename': v, 'filetype': self.__get_type(v), 'documenttitle': v}
 
     def __get_people(self, meta_dict):
         roles = self.olac_role_map.keys()
 
         for role in roles:
-            v = meta_dict.pop(role, None)
-            if v is not None:
-                person = {'role': self.olac_role_map[role], 'id': re.sub(' ', '_', v), 'name': v}
-                meta_dict['table_person_' + role] = person
+            popped = meta_dict.pop(role, None)
+
+            if popped is not None:
+                for v in popped:
+                    person = {'role': self.olac_role_map[role], 'id': re.sub(' ', '_', v), 'name': v}
+                    meta_dict['table_person_' + role] = person
 
 
     # TODO: this could be moved to somewhere like ../utils where other modules could use it
