@@ -86,8 +86,13 @@ class ParadisecIngest(IngestBase):
 
         xml_tree = self.__load_xml_tree(sourcepath)
         meta_dict = metadata.xml2paradisecdict(xml_tree, ignorelist=['olac', 'metadata'])
-        corpus_suffix = meta_dict['uri'][0].split("/")[-1]
-        meta_dict['corpus_suffix'] = corpus_suffix
+
+        for candidate in meta_dict['uri']:
+            if "http://catalog.paradisec.org.au/collections" in candidate:
+                uri = candidate
+                corpus_suffix = uri.split("/")[-1]
+                meta_dict['corpus_suffix'] = corpus_suffix
+                meta_dict['uri'] = candidate
         return meta_dict
 
     def ingestDocument(self, srcdir, sourcepath):
