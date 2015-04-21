@@ -299,7 +299,7 @@ class MetadataMapper(FieldMapper):
                     if 'subdir' in metadata:
                       uri = URIRef(baseuri + self.corpusID.lower() + metadata['subdir'] + docid)
                     else:
-                      if self.corpusID.lower().starts_with("paradisec"):
+                      if self.corpusID.lower().startswith("paradisec"):
                         uri = URIRef(baseuri + "paradisec" + "/" + docid.split("-")[0] + "/" + docid.split("-")[1] + "/" + docid)
                       else:
                         uri = URIRef(baseuri + self.corpusID.lower() + "/" + docid)

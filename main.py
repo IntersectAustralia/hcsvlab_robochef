@@ -18,6 +18,7 @@ from hcsvlab_robochef.rirusyd.ingest import *
 from hcsvlab_robochef.mbep.ingest import *
 from hcsvlab_robochef.jakartan_indonesian.ingest import *
 from hcsvlab_robochef.llc.ingest import *
+from hcsvlab_robochef.trove.ingest import *
 
 
 def main():
@@ -39,7 +40,7 @@ def main():
         os.makedirs(output_dir)
 
     for c in corpora:
-
+        # TODO: all these hard coded variables should be parameterised to vars set in the config.ini
         if c == "art":
             print "converting ART"
             art = ARTIngest()
@@ -187,6 +188,11 @@ def main():
             llc.ingestCorpus(corpus_basedir + "LLC", output_dir + "llc")
             llc.create_collection_manifest(output_dir + "llc", "turtle")
 
+        elif c == "trove":
+            print "converting Trove"
+            trove = TroveIngest()
+            trove.ingestCorpus(corpus_basedir + "trove", output_dir + "trove")
+            trove.create_collection_manifest(output_dir + "trove", "turtle")
 
 if __name__ == "__main__":
     main()
