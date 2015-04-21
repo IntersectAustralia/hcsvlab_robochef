@@ -6,6 +6,8 @@ import re
 from rdflib import Graph
 import rdfextras
 
+import time # NOTE: for benchmarking, remove when no longer needed
+
 COLLECTION_QUERY = """SELECT DISTINCT ?coll
                    WHERE {
                     ?item <http://purl.org/dc/terms/isPartOf> ?coll .
@@ -32,6 +34,7 @@ def create_manifest(srcdir, format):
     sofar = 0
     manifest_hash = {}
 
+    start = time.clock() # NOTE: for benchmarking, remove when no longer needed
     for rdf in rdf_files:
         if sofar == 0:
             manifest_hash = {"collection_name":extract_manifest_collection(rdf, format), "files":{}}
@@ -61,8 +64,12 @@ def create_manifest(srcdir, format):
 
     with open(os.path.join(srcdir, "manifest.json"), 'w') as outfile:
         json.dump(manifest_hash, outfile, indent=True)
-
-    print "\033[2K   ", sofar, "files processed"
+    # NOTE: for benchmarking, remove when no longer needed
+    end = time.clock()
+    elapsed = end - start
+    avg = elapsed / sofar
+    print "%d files processed in %0.3fs (avg of %0.3fs per file)" % (sofar, elapsed, avg)
+    #print "\033[2K   ", sofar, "files processed"
 
 def get_files(srcdir):
 

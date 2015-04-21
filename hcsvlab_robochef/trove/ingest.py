@@ -7,6 +7,8 @@ from rdf import troveMap
 import json
 import os
 
+import time # NOTE: for benchmarking, remove when no longer needed
+
 class TroveIngest(IngestBase):
 
   def setMetaData(self, srcdir):
@@ -17,12 +19,16 @@ class TroveIngest(IngestBase):
 
     total = len(files.keys())
     count = 0
+    start = time.clock()
     for name, path in files.iteritems():
       print count, " of ", total, "\033[A"
       self.ingestDocument(name, path, outdir)    
       count += 1
-    
-    print "\033[2K   ", total, "files processed"
+    # NOTE: for benchmarking, remove when no longer needed
+    end = time.clock()
+    elapsed = end - start
+    avg = elapsed / count
+    print "%d files processed in %0.3fs (avg of %0.3fs per file)" % (count, elapsed, avg)
 
           
   def ingestDocument(self, name, sourcepath, outdir):
