@@ -91,8 +91,10 @@ def __strip_qual__(node):
 
 
 def __flatten_attr__(node):
-#this only works if strip_qual is true
-  if 'type' in node.attrib:
+  #this only works if strip_qual is true
+  if node.tag == 'tableOfContents':
+    return
+  elif 'type' in node.attrib:
     if 'code' in node.attrib:
       if node.text:
         node.tag = node.attrib['code']

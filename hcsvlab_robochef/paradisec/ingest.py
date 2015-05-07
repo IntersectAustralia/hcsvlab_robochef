@@ -141,7 +141,8 @@ class ParadisecIngest(IngestBase):
         docs = meta_dict.pop('tableOfContents', None)
         if docs is not None:
             for v in docs:
-                meta_dict['table_document_' + v] = {'id': v, 'filename': v, 'filetype': self.__get_type(v), 'documenttitle': v}
+                file = os.path.basename(v)
+                meta_dict['table_document_' + file] = {'id': file, 'filename': file, 'filetype': self.__get_type(file), 'documenttitle': file}
 
     def __get_people(self, meta_dict):
         roles = self.olac_role_map.keys()
