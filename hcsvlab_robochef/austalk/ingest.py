@@ -44,12 +44,12 @@ class AustalkIngest(IngestBase):
 			if not os.path.exists(item_metadata) or not os.path.exists(downsampled_doc):
 				print "Missing files - " + item_metadata
 				continue
-			
+
 			split_path = item_metadata.split("/")
 			subdir = split_path[split_path.index("metadata")+1]
 			if not os.path.exists(os.path.join(outdir, subdir)):
 				os.mkdir(os.path.join(outdir, subdir))
-			
+
 			outfile = os.path.join(outdir, subdir, os.path.basename(item_metadata)).replace(".nt", "%s.rdf" % METADATA_FILE_SUFFIX)
 
 			# concatenate all metadata files
@@ -57,7 +57,7 @@ class AustalkIngest(IngestBase):
 
 			# add in downsampled source
 			add_downsampled_document_source(outfile, downsampled_doc)
-			
+
 			# add in sources for other documents
 			add_other_document_sources(outfile, files_metadata)
 
@@ -108,6 +108,6 @@ def write_document_results_to_file(outfile, results, display=False):
 		obj = document.replace("http://data.austalk.edu.au/", configmanager.get_config("DOCUMENT_BASE_URL") + configmanager.get_config("AUSTALK") + "/")
 		g.add( (document, predicate, Literal(obj)) )
 		if display:
-			g.add( (item, HCSVLAB.display_document, document) )
+			g.add( (item, ALVEO.display_document, document) )
 	with open(outfile, "a") as rdf_file:
 		print >> rdf_file, g.serialize(format="nt")
